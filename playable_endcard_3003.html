@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+  />
+  <title>GoCrypto Unity Playable</title>
+  <style>
+    :root {
+      --bg: #000000;
+      --text: #111827;
+      --muted: #667085;
+      --green-1: #1ade5d;
+      --green-2: #09b84a;
+      --green-soft: rgba(23, 184, 76, 0.10);
+      --popup: rgba(255, 255, 255, 0.97);
+      --risk: rgba(17, 24, 39, 0.92);
+      --gray-1: #f3f4f6;
+      --gray-2: #e5e7eb;
+      --gray-border: rgba(148, 163, 184, 0.35);
+    }
+
+    * {
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--bg);
+      font-family: Arial, Helvetica, sans-serif;
+    }
+
+    body {
+      position: fixed;
+      inset: 0;
+    }
+
+    .screen {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background: var(--bg);
+    }
+
+    .bg {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      filter: blur(9px) brightness(0.55);
+      transform: scale(1.08);
+      pointer-events: none;
+    }
+
+    .shade {
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(0, 0, 0, 0.18) 0%, rgba(0, 0, 0, 0.34) 100%);
+      pointer-events: none;
+    }
+
+    .popup-wrap {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px 20px 84px;
+      z-index: 2;
+    }
+
+    .popup {
+      width: min(88vw, 360px);
+      max-width: 360px;
+      background: var(--popup);
+      border-radius: 28px;
+      padding: 24px 22px 20px;
+      text-align: center;
+      box-shadow: 0 24px 60px rgba(0, 0, 0, 0.38);
+      position: relative;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.55);
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
+
+    .popup::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: -78px;
+      transform: translateX(-50%);
+      width: 220px;
+      height: 220px;
+      background: radial-gradient(circle, rgba(58, 214, 114, 0.20) 0%, rgba(58, 214, 114, 0) 70%);
+      pointer-events: none;
+    }
+
+    .brand {
+      position: relative;
+      z-index: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .brand-logo {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      display: block;
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.18);
+      flex: 0 0 auto;
+    }
+
+    .brand-name {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1;
+      letter-spacing: -0.02em;
+    }
+
+    .divider {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(90deg, rgba(0,0,0,0) 0%, rgba(23,184,76,0.26) 18%, rgba(23,184,76,0.55) 50%, rgba(23,184,76,0.26) 82%, rgba(0,0,0,0) 100%);
+      margin: 0 auto 16px;
+    }
+
+    .bonus-chip {
+      position: relative;
+      z-index: 1;
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 999px;
+      background: var(--green-soft);
+      color: #129a3f;
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      margin-bottom: 12px;
+    }
+
+    .label {
+      position: relative;
+      z-index: 1;
+      font-size: 24px;
+      font-weight: 700;
+      color: #1f2937;
+      margin-bottom: 10px;
+    }
+
+    .amount-box {
+      position: relative;
+      z-index: 1;
+      margin: 6px 0 12px;
+      padding: 12px 16px;
+      border-radius: 18px;
+      background: linear-gradient(180deg, var(--gray-1) 0%, var(--gray-2) 100%);
+      border: 1px solid var(--gray-border);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,0.72), 0 4px 12px rgba(148,163,184,0.18);
+    }
+
+    .amount {
+      position: relative;
+      z-index: 1;
+      min-height: 66px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0;
+      font-size: clamp(48px, 10vw, 66px);
+      font-weight: 900;
+      line-height: 1;
+      color: #17b84c;
+      letter-spacing: -0.05em;
+      text-shadow: 0 8px 18px rgba(24, 184, 76, 0.18);
+      white-space: nowrap;
+    }
+
+    .amount.blink {
+      animation: amountBlink 0.85s ease-in-out infinite;
+    }
+
+    .subtext {
+      position: relative;
+      z-index: 1;
+      font-size: 18px;
+      color: var(--muted);
+      margin-bottom: 18px;
+    }
+
+    .cta {
+      position: relative;
+      z-index: 1;
+      display: block;
+      width: 100%;
+      min-height: 56px;
+      border: none;
+      border-radius: 999px;
+      padding: 16px 18px;
+      font-size: 24px;
+      font-weight: 800;
+      color: #ffffff;
+      background: linear-gradient(180deg, var(--green-1) 0%, var(--green-2) 100%);
+      box-shadow: 0 12px 24px rgba(9, 184, 74, 0.28);
+      cursor: pointer;
+      animation: ctaPulse 1.45s ease-in-out infinite;
+    }
+
+    .cta:active {
+      transform: scale(0.98);
+    }
+
+    .risk-bar {
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+      z-index: 3;
+      padding: 10px 12px;
+      border-radius: 14px;
+      background: var(--risk);
+      border: 1px solid rgba(255,255,255,0.10);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.22);
+      color: rgba(255,255,255,0.88);
+      font-size: 11px;
+      line-height: 1.28;
+      text-align: center;
+    }
+
+    .success-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 5;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: rgba(0, 0, 0, 0.6);
+    }
+
+    .success-box {
+      width: min(82vw, 300px);
+      background: #fff;
+      border-radius: 22px;
+      padding: 22px;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.28);
+    }
+
+    .success-box h2 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      color: #111;
+    }
+
+    .success-box p {
+      margin: 0;
+      font-size: 16px;
+      line-height: 1.4;
+      color: #666;
+    }
+
+    @keyframes ctaPulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.04); }
+    }
+
+    @keyframes amountBlink {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.72; transform: scale(1.045); }
+    }
+
+    @media (max-height: 640px) {
+      .popup-wrap {
+        padding-bottom: 78px;
+      }
+
+      .popup {
+        padding: 18px 18px 16px;
+      }
+
+      .brand-name {
+        font-size: 21px;
+      }
+
+      .label {
+        font-size: 21px;
+        margin-bottom: 8px;
+      }
+
+      .amount {
+        font-size: clamp(42px, 9vw, 56px);
+        min-height: 56px;
+      }
+
+      .subtext {
+        font-size: 16px;
+        margin-bottom: 14px;
+      }
+
+      .cta {
+        min-height: 52px;
+        font-size: 22px;
+        padding: 14px 18px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="screen" id="screen">
+    <!-- Unity upload version: keep these files local in the zip -->
+    <img class="bg" src="assets/bg.jpg" alt="background" />
+    <div class="shade"></div>
+
+    <div class="popup-wrap">
+      <div class="popup">
+        <div class="brand">
+          <img class="brand-logo" src="assets/logo.png" alt="GoCrypto logo" />
+          <div class="brand-name">GoCrypto</div>
+        </div>
+
+        <div class="divider"></div>
+        <div class="bonus-chip">LIMITED WELCOME BONUS</div>
+        <div class="label">You have won</div>
+
+        <div class="amount-box">
+          <div class="amount" id="amount">$0</div>
+        </div>
+
+        <div class="subtext">simulation in-app balance</div>
+        <button class="cta" id="ctaBtn" aria-label="Get Bonus">Get Bonus</button>
+      </div>
+    </div>
+
+    <div class="risk-bar">The final result is not guaranteed, the amount you can obtain is subject to the rules published in the app or web page</div>
+
+    <div class="success-overlay" id="successOverlay">
+      <div class="success-box">
+        <h2>CTA clicked</h2>
+        <p>Set your Unity playable exit URL through clickTag or replace the handler if needed.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      'use strict';
+
+      var amountEl = document.getElementById('amount');
+      var ctaBtn = document.getElementById('ctaBtn');
+      var successOverlay = document.getElementById('successOverlay');
+      var targetValue = 5000;
+      var duration = 1800;
+      var clickLocked = false;
+
+      function formatUSD(value) {
+        return '$' + Math.floor(value).toLocaleString('en-US');
+      }
+
+      function animateAmount(from, to, ms) {
+        var startTime = performance.now();
+        amountEl.textContent = formatUSD(from);
+
+        function update(now) {
+          var progress = Math.min((now - startTime) / ms, 1);
+          var eased = 1 - Math.pow(1 - progress, 3);
+          var current = from + (to - from) * eased;
+          amountEl.textContent = formatUSD(current);
+
+          if (progress < 1) {
+            requestAnimationFrame(update);
+          } else {
+            amountEl.textContent = formatUSD(to);
+            ctaBtn.style.transform = 'scale(1.06)';
+            setTimeout(function () {
+              ctaBtn.style.transform = '';
+            }, 220);
+            amountEl.classList.remove('blink');
+            void amountEl.offsetWidth;
+            amountEl.classList.add('blink');
+          }
+        }
+
+        requestAnimationFrame(update);
+      }
+
+      function getClickTag() {
+        if (typeof window.clickTag === 'string' && window.clickTag.length > 0) {
+          return window.clickTag;
+        }
+        return 'https://play.google.com/store/apps/details?id=academy.gocrypto.trading';
+      }
+
+      function exitPlayable() {
+        if (clickLocked) return;
+        clickLocked = true;
+
+        var clickTag = getClickTag();
+
+        try {
+          if (window.mraid && typeof window.mraid.open === 'function') {
+            window.mraid.open(clickTag);
+            return;
+          }
+
+          if (window.ExitApi && typeof window.ExitApi.exit === 'function') {
+            window.ExitApi.exit();
+            return;
+          }
+
+          if (typeof window.open === 'function') {
+            window.open(clickTag, '_blank');
+            return;
+          }
+        } catch (err) {}
+
+        successOverlay.style.display = 'flex';
+      }
+
+      function boot() {
+        animateAmount(0, targetValue, duration);
+        ctaBtn.addEventListener('click', exitPlayable, false);
+      }
+
+      if (document.readyState === 'complete' || document.readyState === 'interactive') {
+        boot();
+      } else {
+        document.addEventListener('DOMContentLoaded', boot, false);
+      }
+    })();
+  </script>
+</body>
+</html>
